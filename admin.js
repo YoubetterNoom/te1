@@ -234,11 +234,33 @@ style.textContent = `
         align-items: center;
         justify-content: space-between;
         margin-bottom: 20px;
+        border-bottom: 2px solid #0f0;
+        padding-bottom: 15px;
+    }
+
+    .admin-header .matrix-title {
+        margin: 0;
+        font-size: 2em;
+        color: #0f0;
+        text-shadow: 0 0 10px #0f0;
+        letter-spacing: 3px;
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        animation: textGlow 1.5s ease-in-out infinite alternate;
     }
 
     @keyframes spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
+    }
+
+    @keyframes textGlow {
+        from {
+            text-shadow: 0 0 10px #0f0;
+        }
+        to {
+            text-shadow: 0 0 20px #0f0, 0 0 30px #0f0;
+        }
     }
 `;
 document.head.appendChild(style);
