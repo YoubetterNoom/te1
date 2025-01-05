@@ -7,44 +7,115 @@ class ConversationManager {
 
     initFirebase() {
         try {
-            console.log('Initializing Firebase...');
-            // 初始化 Firebase
+            console.log('Starting Firebase initialization...');
+            
+            // 检查配置是否存在
+            if (!CONFIG || !CONFIG.FIREBASE_CONFIG) {
+                throw new Error('Firebase configuration is missing');
+            }
+            
+            console.log('Firebase config:', CONFIG.FIREBASE_CONFIG);
+            
             if (!firebase.apps.length) {
                 firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+                console.log('Firebase app initialized');
             }
             
             this.db = firebase.database();
-            this.conversationsRef = this.db.ref('conversations');
-            console.log('Firebase initialized successfully');
+            console.log('Firebase database initialized');
+            
+            // 设置数据引用
+            this.conversationsRef = this.db.ref('/conversations');
+            console.log('Conversations reference created');
+
+            // 测试写入一些数据
+            this.testInitialData();
             
             // 监听数据变化
             this.conversationsRef.on('value', (snapshot) => {
-                console.log('Firebase data updated:', snapshot.val());
+                console.log('Received data from Firebase:', snapshot.val());
                 const data = snapshot.val();
                 if (data) {
-                    this.conversations = Array.isArray(data) ? data : Object.values(data);
-                    localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
+                    // 转换数据格式
+                    const allConversations = [];
+                    Object.values(data).forEach(item => {
+                        if (item.conversations && Array.isArray(item.conversations)) {
+                            allConversations.push(...item.conversations);
+                        }
+                    });
+                    
+                    console.log('Processed conversations:', allConversations);
+                    this.conversations = allConversations;
+                    localStorage.setItem('savedConversations', JSON.stringify(allConversations));
+                    
+                    // 更新显示
                     if (typeof updateHistoryGrid === 'function') {
                         updateHistoryGrid();
                     }
                 }
             });
+            
+            // 加载本地数据
+            const savedData = localStorage.getItem('savedConversations');
+            if (savedData) {
+                this.conversations = JSON.parse(savedData);
+                if (typeof updateHistoryGrid === 'function') {
+                    updateHistoryGrid();
+                }
+            }
+            
         } catch (error) {
             console.error('Firebase initialization error:', error);
+        }
+    }
+
+    async testInitialData() {
+        try {
+            // 检查是否已有数据
+            const snapshot = await this.conversationsRef.once('value');
+            if (!snapshot.val()) {
+                console.log('No existing data, creating test data...');
+                // 创建测试数据
+                await this.conversationsRef.push({
+                    conversations: [{
+                        title: 'Test Conversation',
+                        timestamp: new Date().toISOString(),
+                        messages: [
+                            { type: 'user', text: 'Hello Matrix!' },
+                            { type: 'ai', text: 'Welcome to the Matrix!' }
+                        ]
+                    }],
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    lastUpdate: new Date().toISOString()
+                });
+                console.log('Test data created successfully');
+            }
+        } catch (error) {
+            console.error('Error creating test data:', error);
         }
     }
 
     async saveToStorage() {
         try {
             console.log('Attempting to save to Firebase:', this.conversations);
+            
+            // 创建一个新的引用，使用push()生成唯一ID
+            const newConversationRef = this.conversationsRef.push();
+            
             // 保存到 Firebase
-            await this.conversationsRef.set(this.conversations);
+            await newConversationRef.set({
+                conversations: this.conversations,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                lastUpdate: new Date().toISOString()
+            });
+            
             console.log('Successfully saved to Firebase');
+            
             // 同时保存到本地存储作为备份
             localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
         } catch (error) {
             console.error('Error saving to Firebase:', error);
-            // 如果 Firebase 保存失败，至少保存到本地
+            console.error('Error details:', error.message);
             localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
         }
     }
@@ -139,7 +210,8 @@ class ConversationManager {
     }
 }
 
-// 等待 Firebase 加载完成后再创建实例
-window.addEventListener('load', () => {
+// 确保在页面完全加载后初始化
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded, initializing ConversationManager...');
     window.conversationManager = new ConversationManager();
 }); 
