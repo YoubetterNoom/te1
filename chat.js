@@ -184,7 +184,7 @@ async function callBackupAPI(message) {
                 'Content-Type': 'application/json',
                 'Cohere-Version': '2022-12-06'
             },
-            body: JSON.stringify({
+            body: JSON.stringify({a
                 model: 'command-light',
                 prompt: fullPrompt,
                 max_tokens: 150,
@@ -382,8 +382,8 @@ async function saveConversation() {
         // Remove any existing conversation from this wallet
         savedConversations = savedConversations.filter(conv => conv.walletAddress !== walletAddress);
         
-        // Add new conversation at the beginning
-        savedConversations.unshift({
+        // Create new conversation object
+        const newConversation = {
             title: title,
             timestamp: timestamp,
             preview: preview,
@@ -392,20 +392,40 @@ async function saveConversation() {
             views: 0,
             isPinned: false,
             score: null
-        });
+        };
+        
+        // Add new conversation at the beginning
+        savedConversations.unshift(newConversation);
 
+        // 立即更新显示
         updateHistoryGrid();
+        
+        // 滚动到新保存的对话
+        setTimeout(() => {
+            const firstItem = document.querySelector('.recent-container .grid-item');
+            if (firstItem) {
+                firstItem.scrollIntoView({ behavior: 'smooth' });
+                // 添加高亮动画
+                firstItem.classList.add('highlight-new');
+                setTimeout(() => {
+                    firstItem.classList.remove('highlight-new');
+                }, 2000);
+            }
+        }, 100);
+
         conversationSaved = true;
         lastSaveTime[walletAddress] = currentTime;
         
-        // Show success message
+        // Show success message with auto-scroll
         const successMessage = document.createElement('div');
         successMessage.className = 'message system-message';
-        successMessage.textContent = 'Conversation saved successfully!';
+        successMessage.textContent = 'Conversation saved successfully! Check the Recent Conversations below.';
         document.getElementById('chatBox').appendChild(successMessage);
+        successMessage.scrollIntoView({ behavior: 'smooth' });
         
         console.log('Conversation saved:', savedConversations);
 
+        // 保存到localStorage
         persistConversations();
         
         isConversationSubmitted = true;

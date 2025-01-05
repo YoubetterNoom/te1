@@ -1257,4 +1257,27 @@ button:hover,
     position: absolute;
     top: 60px;
     right: 20px;
+}
+
+@keyframes highlightNew {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #0f0;
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px #0f0;
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #0f0;
+    }
+}
+
+.grid-item.highlight-new {
+    animation: highlightNew 2s ease-in-out;
+}
+
+.recent-container {
+    scroll-behavior: smooth;
 } 
