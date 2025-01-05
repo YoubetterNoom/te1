@@ -451,4 +451,91 @@ window.addEventListener('unload', () => {
 // 导出函数到全局作用域
 window.createNewChat = createNewChat;
 window.addMessageInput = addMessageInput;
-window.submitNewChat = submitNewChat; 
+window.submitNewChat = submitNewChat;
+
+class AdminPanel {
+    constructor() {
+        this.initFirebase();
+        this.setupEventListeners();
+    }
+
+    initFirebase() {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+        }
+        this.db = firebase.database();
+        this.conversationsRef = this.db.ref('/conversations');
+        
+        // 监听数据变化
+        this.conversationsRef.on('value', this.updateConversationList.bind(this));
+    }
+
+    updateConversationList(snapshot) {
+        const conversationList = document.querySelector('.conversation-list');
+        conversationList.innerHTML = '';
+        
+        const data = snapshot.val();
+        if (data) {
+            Object.entries(data).reverse().forEach(([key, item]) => {
+                const conv = item.conversation;
+                const element = this.createConversationElement(key, conv);
+                conversationList.appendChild(element);
+            });
+        }
+    }
+
+    createConversationElement(key, conv) {
+        const element = document.createElement('div');
+        element.className = 'admin-conversation-item';
+        element.innerHTML = `
+            <div class="conversation-info">
+                <div class="title">${conv.title || 'Untitled'}</div>
+                <div class="timestamp">${conv.timestamp}</div>
+                <div class="wallet-address">${conv.walletAddress}</div>
+            </div>
+            <div class="admin-actions">
+                <button onclick="adminPanel.viewConversation('${key}')">View</button>
+                <button onclick="adminPanel.deleteConversation('${key}')" class="delete-btn">Delete</button>
+            </div>
+        `;
+        return element;
+    }
+
+    async createNewChat(chatData) {
+        try {
+            await this.conversationsRef.push({
+                conversation: chatData,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            console.log('New chat created successfully');
+        } catch (error) {
+            console.error('Error creating new chat:', error);
+        }
+    }
+
+    async deleteConversation(key) {
+        if (confirm('Are you sure you want to delete this conversation?')) {
+            try {
+                await this.conversationsRef.child(key).remove();
+                console.log('Conversation deleted successfully');
+            } catch (error) {
+                console.error('Error deleting conversation:', error);
+            }
+        }
+    }
+
+    async viewConversation(key) {
+        const snapshot = await this.conversationsRef.child(key).once('value');
+        const data = snapshot.val();
+        if (data && data.conversation) {
+            this.showConversationModal(data.conversation);
+        }
+    }
+
+    showConversationModal(conversation) {
+        // ... 显示对话详情的模态框代码 ...
+    }
+}
+
+// 初始化管理员面板
+window.adminPanel = new AdminPanel(); 
