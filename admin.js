@@ -96,26 +96,101 @@ function viewConversation(index) {
 }
 
 function createNewChat() {
+    const modal = document.createElement('div');
+    modal.className = 'admin-modal create-chat-modal';
+    modal.innerHTML = `
+        <div class="admin-modal-content">
+            <h2>Create New Conversation</h2>
+            <div class="form-group">
+                <label>Title:</label>
+                <input type="text" id="new-chat-title" placeholder="Enter conversation title">
+            </div>
+            <div class="form-group">
+                <label>Wallet Address:</label>
+                <input type="text" id="new-chat-wallet" placeholder="Enter wallet address">
+            </div>
+            <div class="form-group">
+                <label>Timestamp:</label>
+                <input type="datetime-local" id="new-chat-timestamp">
+            </div>
+            <div class="form-group">
+                <label>Messages:</label>
+                <div id="messages-container">
+                    <div class="message-input">
+                        <select class="message-type">
+                            <option value="user">User</option>
+                            <option value="ai">AI</option>
+                        </select>
+                        <textarea class="message-text" placeholder="Enter message text"></textarea>
+                        <button class="remove-message" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                </div>
+                <button onclick="addMessageInput()" class="add-message-btn">+ Add Message</button>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="submitNewChat()" class="submit-btn">Create</button>
+                <button onclick="this.closest('.admin-modal').remove()" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // 设置默认时间为当前时间
+    document.getElementById('new-chat-timestamp').value = 
+        new Date().toISOString().slice(0, 16);
+}
+
+// 添加新的消息输入框
+function addMessageInput() {
+    const container = document.getElementById('messages-container');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-input';
+    messageDiv.innerHTML = `
+        <select class="message-type">
+            <option value="user">User</option>
+            <option value="ai">AI</option>
+        </select>
+        <textarea class="message-text" placeholder="Enter message text"></textarea>
+        <button class="remove-message" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(messageDiv);
+}
+
+// 提交新对话
+function submitNewChat() {
+    const title = document.getElementById('new-chat-title').value.trim();
+    const walletAddress = document.getElementById('new-chat-wallet').value.trim();
+    const timestamp = new Date(document.getElementById('new-chat-timestamp').value).toLocaleString();
+    
+    const messageInputs = document.querySelectorAll('.message-input');
+    const messages = Array.from(messageInputs).map(input => ({
+        type: input.querySelector('.message-type').value,
+        text: input.querySelector('.message-text').value.trim()
+    })).filter(msg => msg.text);
+
+    if (!title || !walletAddress || !messages.length) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
     const newChat = {
-        title: 'Admin Created Chat',
-        timestamp: new Date().toLocaleString(),
-        walletAddress: 'ADMIN',
-        messages: [
-            { type: 'ai', text: 'This is an admin-created conversation.' }
-        ],
+        title: title,
+        timestamp: timestamp,
+        walletAddress: walletAddress,
+        messages: messages,
         views: 0,
         score: null,
         isPinned: false,
-        preview: 'This is an admin-created conversation.'
+        preview: messages[0].text.substring(0, 50) + '...'
     };
 
     const conversations = JSON.parse(localStorage.getItem('savedConversations') || '[]');
     conversations.unshift(newChat);
     localStorage.setItem('savedConversations', JSON.stringify(conversations));
     
+    document.querySelector('.create-chat-modal').remove();
     loadConversations();
-    
-    alert('New conversation created successfully!');
+    showRefreshMessage('New conversation created successfully!');
 }
 
 function togglePin(index) {
@@ -262,6 +337,84 @@ style.textContent = `
             text-shadow: 0 0 20px #0f0, 0 0 30px #0f0;
         }
     }
+
+    .create-chat-modal .admin-modal-content {
+        width: 600px;
+        max-width: 90vw;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #0f0;
+    }
+
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 8px;
+        background: rgba(0, 20, 0, 0.8);
+        border: 1px solid #0f0;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+    }
+
+    .message-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: start;
+    }
+
+    .message-input select {
+        width: 100px;
+    }
+
+    .message-input textarea {
+        flex-grow: 1;
+        height: 60px;
+        resize: vertical;
+    }
+
+    .remove-message {
+        background: transparent;
+        border: 1px solid #f00;
+        color: #f00;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .add-message-btn {
+        width: 100%;
+        margin-top: 10px;
+        background: rgba(0, 255, 0, 0.2);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .submit-btn {
+        background: #0f0;
+        color: #000;
+    }
+
+    .cancel-btn {
+        background: transparent;
+        border: 1px solid #0f0;
+        color: #0f0;
+    }
 `;
 document.head.appendChild(style);
 
@@ -293,4 +446,9 @@ function stopAutoRefresh() {
 
 window.addEventListener('unload', () => {
     stopAutoRefresh();
-}); 
+});
+
+// 导出函数到全局作用域
+window.createNewChat = createNewChat;
+window.addMessageInput = addMessageInput;
+window.submitNewChat = submitNewChat; 

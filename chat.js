@@ -184,7 +184,7 @@ async function callBackupAPI(message) {
                 'Content-Type': 'application/json',
                 'Cohere-Version': '2022-12-06'
             },
-            body: JSON.stringify({a
+            body: JSON.stringify({
                 model: 'command-light',
                 prompt: fullPrompt,
                 max_tokens: 150,
@@ -373,9 +373,7 @@ async function saveConversation() {
     }
 
     try {
-        // 获取标题
         const title = await showTitleDialog();
-        
         const timestamp = new Date().toLocaleString();
         const preview = currentConversation[0].text.substring(0, 50) + '...';
         
@@ -397,15 +395,30 @@ async function saveConversation() {
         // Add new conversation at the beginning
         savedConversations.unshift(newConversation);
 
+        // 先保存到localStorage
+        persistConversations();
+
         // 立即更新显示
         updateHistoryGrid();
+        
+        // 确保Recent Conversations区域存在
+        const recentSection = document.querySelector('.recent-section');
+        if (!recentSection) {
+            // 如果不存在，创建Recent Conversations区域
+            createHistorySection();
+        }
         
         // 滚动到新保存的对话
         setTimeout(() => {
             const firstItem = document.querySelector('.recent-container .grid-item');
             if (firstItem) {
-                firstItem.scrollIntoView({ behavior: 'smooth' });
-                // 添加高亮动画
+                // 确保Recent Conversations区域可见
+                const recentSection = document.querySelector('.recent-section');
+                if (recentSection) {
+                    recentSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+                // 高亮新保存的对话
                 firstItem.classList.add('highlight-new');
                 setTimeout(() => {
                     firstItem.classList.remove('highlight-new');
@@ -425,9 +438,6 @@ async function saveConversation() {
         
         console.log('Conversation saved:', savedConversations);
 
-        // 保存到localStorage
-        persistConversations();
-        
         isConversationSubmitted = true;
         document.querySelector('.chat-container').classList.add('conversation-submitted');
         
@@ -455,25 +465,68 @@ async function saveConversation() {
     }
 }
 
+// 添加创建历史记录区域的函数
+function createHistorySection() {
+    const mainContainer = document.querySelector('.chat-container').parentElement;
+    
+    const historySection = document.createElement('div');
+    historySection.className = 'history-grid';
+    historySection.innerHTML = `
+        <div class="section-header">
+            <h2 class="section-title">Recent Conversations</h2>
+            <div class="refresh-section">
+                <button class="refresh-btn" id="refreshButton">
+                    <span class="refresh-icon">↻</span>
+                </button>
+                <span class="last-update">Last update: <span id="lastUpdateTime"></span></span>
+            </div>
+        </div>
+        <div class="pinned-section">
+            <h3 class="section-title">📌 Pinned</h3>
+            <div class="grid-container pinned-container"></div>
+        </div>
+        <div class="recent-section">
+            <h3 class="section-title">Recent</h3>
+            <div class="grid-container recent-container"></div>
+        </div>
+    `;
+    
+    mainContainer.appendChild(historySection);
+    
+    // 重新绑定刷新按钮事件
+    const refreshButton = document.getElementById('refreshButton');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshConversations);
+    }
+}
+
+// 修改updateHistoryGrid函数，添加更多日志
 function updateHistoryGrid() {
     console.log('Updating history grid...');
     const pinnedContainer = document.querySelector('.pinned-container');
     const recentContainer = document.querySelector('.recent-container');
     
     if (!pinnedContainer || !recentContainer) {
-        console.error('Could not find containers');
-        return;
+        console.log('Containers not found, creating history section...');
+        createHistorySection();
+        // 重新获取容器
+        const newPinnedContainer = document.querySelector('.pinned-container');
+        const newRecentContainer = document.querySelector('.recent-container');
+        if (!newPinnedContainer || !newRecentContainer) {
+            console.error('Failed to create containers');
+            return;
+        }
     }
     
     // 获取最新的对话列表
     const conversations = JSON.parse(localStorage.getItem('savedConversations') || '[]');
-    console.log('Current conversations:', conversations);
+    console.log('Loaded conversations:', conversations);
     
-    // Clear existing items
+    // 清空现有内容
     pinnedContainer.innerHTML = '';
     recentContainer.innerHTML = '';
     
-    // Separate pinned and recent conversations
+    // 更新对话列表
     conversations.forEach((conversation, index) => {
         console.log('Processing conversation:', conversation);
         const gridItem = document.createElement('div');
