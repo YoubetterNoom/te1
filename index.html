@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Style Chat</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/wallet-adapter-base@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/wallet-adapter-phantom@latest/lib/index.iife.min.js"></script>
+</head>
+<body>
+    <div class="crt-frame">
+        <div class="crt-screen">
+            <div class="crt-effects">
+                <div class="scanlines"></div>
+                <div class="flicker"></div>
+                <div class="online-counter">
+                    <span class="online-label">ONLINE:</span>
+                    <span id="online-count">0</span>
+                </div>
+                <div id="wallet-container" class="wallet-container">
+                    <button id="wallet-button" onclick="connectWallet()">Connect Wallet</button>
+                </div>
+
+                <div id="startup-screen" class="startup-screen">
+                    <pre id="startup-text" class="startup-text"></pre>
+                    <div id="startup-loader" class="startup-loader">Loading...</div>
+                </div>
+
+                <canvas class="matrix-background" id="matrix"></canvas>
+                
+                <div class="chat-container">
+                    <h1 class="matrix-title">MATRIX SYSTEM</h1>
+                    <div class="chat-box" id="chatBox"></div>
+                    <div class="input-area">
+                        <input type="text" id="userInput" placeholder="Enter message...">
+                        <button id="sendButton">Send</button>
+                        <button id="saveButton">Save</button>
+                        <button id="clearButton">Clear</button>
+                    </div>
+                </div>
+
+                <div class="history-grid">
+                    <div class="pinned-section" style="display: none;">
+                        <h2 class="section-title">📌 Pinned Conversations</h2>
+                        <div class="grid-container pinned-container">
+                            <!-- Pinned conversations will be added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <div class="refresh-section">
+                            <button id="refreshButton" class="refresh-btn">
+                                <span class="refresh-icon">↻</span> Refresh
+                            </button>
+                            <span class="last-update">Last updated: <span id="lastUpdateTime">Just now</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-section" style="display: block;">
+                        <h2 class="section-title">Recent Conversations</h2>
+                        <div class="grid-container recent-container">
+                            <!-- Recent conversations will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="crt-bezel">
+            <div class="crt-bezel-top"></div>
+            <div class="crt-bezel-bottom"></div>
+        </div>
+    </div>
+
+    <script src="wallet.js"></script>
+    <script src="startup.js"></script>
+    <script src="matrix.js"></script>
+    <script src="config.js"></script>
+    <script src="chat.js"></script>
+    <script src="online-counter.js"></script>
+    <script src="conversations.js"></script>
+</body>
+</html>

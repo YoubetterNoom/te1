@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="crt-frame">
+        <div class="crt-screen">
+            <div class="crt-effects">
+                <div class="scanlines"></div>
+                <div class="flicker"></div>
+                
+                <div id="admin-login" class="admin-panel">
+                    <h1 class="matrix-title">MATRIX ADMIN</h1>
+                    <div class="admin-login-form">
+                        <input type="password" id="adminPassword" placeholder="Enter Admin Password">
+                        <button onclick="verifyPassword()">Access System</button>
+                    </div>
+                </div>
+
+                <div id="admin-dashboard" class="admin-panel" style="display: none;">
+                    <h1 class="matrix-title">SYSTEM CONTROL</h1>
+                    <div class="admin-controls">
+                        <button onclick="createNewChat()">Create New Chat</button>
+                        <button onclick="window.location.href='index.html'">Return to Matrix</button>
+                        <div class="conversation-controls">
+                            <button onclick="exportConversations()">Export All</button>
+                            <input type="file" id="importFile" accept=".json" style="display: none" 
+                                   onchange="importConversations(event)">
+                            <button onclick="document.getElementById('importFile').click()">Import</button>
+                        </div>
+                    </div>
+                    <div class="conversation-list">
+                        <!-- Conversations will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="crt-bezel">
+            <div class="crt-bezel-top"></div>
+            <div class="crt-bezel-bottom"></div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script src="matrix.js"></script>
+    <script src="online-counter.js"></script>
+</body>
+</html> 
