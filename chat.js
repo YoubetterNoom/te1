@@ -228,14 +228,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.walletManager || !window.walletManager.isConnected()) {
         if (userInput) userInput.disabled = true;
         if (sendButton) sendButton.disabled = true;
-        if (saveButton) saveButton.disabled = true;
+        if (saveButton) sendButton.disabled = true;
     }
 
-    if (sendButton) sendButton.addEventListener('click', sendMessage);
-    if (saveButton) saveButton.addEventListener('click', saveConversation);
-    if (clearButton) clearButton.addEventListener('click', clearChat);
-    if (refreshButton) refreshButton.addEventListener('click', refreshConversations);
-    
+    // 使用addEventListener而不是onclick
+    if (sendButton) {
+        sendButton.addEventListener('click', sendMessage);
+    }
+    if (saveButton) {
+        saveButton.addEventListener('click', saveConversation);
+    }
+    if (clearButton) {
+        clearButton.addEventListener('click', clearChat);
+    }
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshConversations);
+    }
+
     // 添加回车键发送功能
     if (userInput) {
         userInput.addEventListener('keypress', (e) => {
