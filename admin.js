@@ -1,11 +1,15 @@
 const ADMIN_PASSWORD = '123456'; // 在实际应用中应该使用更安全的方式存储密码
 
+let autoRefreshInterval;
+
 function verifyPassword() {
     const password = document.getElementById('adminPassword').value;
     if (password === ADMIN_PASSWORD) {
         document.getElementById('admin-login').style.display = 'none';
         document.getElementById('admin-dashboard').style.display = 'block';
         loadConversations();
+        setupRefreshButton();
+        startAutoRefresh();
     } else {
         alert('Invalid password. Access denied.');
     }
@@ -192,4 +196,79 @@ async function importConversations(event) {
         console.error('Import error:', error);
         alert('Error importing conversations');
     }
-} 
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    .refresh-btn {
+        background: transparent;
+        border: 2px solid #0f0;
+        color: #0f0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        margin-left: 15px;
+    }
+
+    .refresh-btn:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    .refresh-icon {
+        font-size: 20px;
+        transition: transform 0.5s ease;
+    }
+
+    .refreshing .refresh-icon {
+        animation: spin 1s linear infinite;
+    }
+
+    .admin-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
+function setupRefreshButton() {
+    const refreshButton = document.getElementById('refreshButton');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', () => {
+            refreshButton.classList.add('refreshing');
+            loadConversations();
+            setTimeout(() => {
+                refreshButton.classList.remove('refreshing');
+            }, 500);
+        });
+    }
+}
+
+function startAutoRefresh() {
+    // 每30秒自动刷新一次
+    autoRefreshInterval = setInterval(() => {
+        loadConversations();
+    }, 30000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+}
+
+window.addEventListener('unload', () => {
+    stopAutoRefresh();
+}); 

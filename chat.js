@@ -10,6 +10,7 @@ let conversationSaved = false;
 const SAVE_COOLDOWN = 600000; // 10 minutes in milliseconds
 let lastSaveTime = {};  // Object to store last save time for each wallet
 let isConversationSubmitted = false;
+let countdownTimer = null;
 
 // Load saved conversations from localStorage
 function loadSavedConversations() {
@@ -362,12 +363,11 @@ async function saveConversation() {
     const walletAddress = window.walletManager.getFormattedAddress();
     const currentTime = Date.now();
 
-    // Check if this wallet has a cooldown period
+    // 检查是否在冷却期
     if (lastSaveTime[walletAddress]) {
         const timeElapsed = currentTime - lastSaveTime[walletAddress];
         if (timeElapsed < SAVE_COOLDOWN) {
-            const minutesLeft = Math.ceil((SAVE_COOLDOWN - timeElapsed) / 60000);
-            alert(`Please wait ${minutesLeft} minutes before saving another conversation.`);
+            showCountdownDialog(walletAddress);
             return;
         }
     }
@@ -525,4 +525,100 @@ function clearChat() {
         inputArea.style.pointerEvents = 'auto';
         inputArea.style.opacity = '1';
     }
+}
+
+// 添加倒计时对话框样式
+const style = document.createElement('style');
+style.textContent = `
+    .countdown-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #0f0;
+        padding: 20px;
+        z-index: 1000;
+        color: #0f0;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+        box-shadow: 0 0 20px #0f0;
+    }
+    .countdown-dialog h2 {
+        margin: 0 0 15px 0;
+        color: #0f0;
+    }
+    .countdown-timer {
+        font-size: 24px;
+        margin: 10px 0;
+        text-shadow: 0 0 5px #0f0;
+    }
+    .countdown-close {
+        background: transparent;
+        border: 1px solid #0f0;
+        color: #0f0;
+        padding: 5px 15px;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+    .countdown-close:hover {
+        background: #0f0;
+        color: #000;
+    }
+`;
+document.head.appendChild(style);
+
+// 添加显示倒计时对话框的函数
+function showCountdownDialog(walletAddress) {
+    // 移除已存在的对话框
+    const existingDialog = document.querySelector('.countdown-dialog');
+    if (existingDialog) {
+        existingDialog.remove();
+    }
+
+    const dialog = document.createElement('div');
+    dialog.className = 'countdown-dialog';
+    dialog.innerHTML = `
+        <h2>Save Cooldown</h2>
+        <div>Please wait before saving another conversation</div>
+        <div class="countdown-timer"></div>
+        <button class="countdown-close" onclick="this.parentElement.remove()">Close</button>
+    `;
+    document.body.appendChild(dialog);
+
+    // 开始倒计时
+    updateCountdown(walletAddress, dialog.querySelector('.countdown-timer'));
+}
+
+// 添加更新倒计时的函数
+function updateCountdown(walletAddress, timerElement) {
+    // 清除现有的倒计时
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+    }
+
+    function updateTimer() {
+        const currentTime = Date.now();
+        const lastSave = lastSaveTime[walletAddress];
+        const timeLeft = SAVE_COOLDOWN - (currentTime - lastSave);
+
+        if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            const dialog = document.querySelector('.countdown-dialog');
+            if (dialog) {
+                dialog.remove();
+            }
+            return;
+        }
+
+        // 转换为分:秒格式
+        const minutes = Math.floor(timeLeft / 60000);
+        const seconds = Math.floor((timeLeft % 60000) / 1000);
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // 立即更新一次
+    updateTimer();
+    // 每秒更新一次
+    countdownTimer = setInterval(updateTimer, 1000);
 } 
