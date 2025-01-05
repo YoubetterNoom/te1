@@ -411,17 +411,23 @@ async function saveConversation() {
         isConversationSubmitted = true;
         document.querySelector('.chat-container').classList.add('conversation-submitted');
         
+        // 使用新的ID选择器来获取按钮
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const saveButton = document.getElementById('saveButton');
+        const clearButton = document.getElementById('clearButton');
+
+        // 禁用输入框和按钮
+        if (userInput) userInput.disabled = true;
+        if (sendButton) sendButton.disabled = true;
+        if (saveButton) saveButton.disabled = true;
+
         // 确保Clear按钮仍然可以点击
-        const clearButton = document.querySelector('button[onclick="clearChat()"]');
         if (clearButton) {
+            clearButton.disabled = false;
             clearButton.style.pointerEvents = 'auto';
             clearButton.style.opacity = '1';
         }
-
-        // 禁用其他按钮和输入框
-        document.getElementById('userInput').disabled = true;
-        document.querySelector('button[onclick="sendMessage()"]').disabled = true;
-        document.querySelector('button[onclick="saveConversation()"]').disabled = true;
 
     } catch (error) {
         console.error('Error saving conversation:', error);
@@ -502,12 +508,15 @@ function clearChat() {
     conversationSaved = false;
     isConversationSubmitted = false;
     
-    // Re-enable input and buttons
-    document.getElementById('userInput').disabled = false;
-    const sendButton = document.querySelector('button[onclick="sendMessage()"]');
-    if (sendButton) {
-        sendButton.disabled = false;
-    }
+    // Re-enable input and buttons using ID selectors
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const saveButton = document.getElementById('saveButton');
+    
+    if (userInput) userInput.disabled = false;
+    if (sendButton) sendButton.disabled = false;
+    if (saveButton) saveButton.disabled = false;
+    
     document.querySelector('.chat-container').classList.remove('conversation-submitted');
 
     // Remove the pointer-events: none style
@@ -516,21 +525,4 @@ function clearChat() {
         inputArea.style.pointerEvents = 'auto';
         inputArea.style.opacity = '1';
     }
-}
-
-// Make sure the save button is properly bound
-document.addEventListener('DOMContentLoaded', () => {
-    const saveButton = document.querySelector('button[onclick="saveConversation()"]');
-    if (saveButton) {
-        saveButton.onclick = saveConversation;
-    }
-    
-    // 加载保存的对话
-    loadSavedConversations();
-    
-    // 设置初始刷新时间
-    updateLastRefreshTime();
-    
-    // 启动自动刷新
-    startAutoRefresh();
-}); 
+} 
