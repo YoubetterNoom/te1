@@ -1,28 +1,39 @@
 class ConversationManager {
     constructor() {
         this.conversations = [];
-        this.autoLoadInterval = 30000; // 30秒自动加载一次
+        this.autoLoadInterval = 30000;
+        this.initFirebase();
         this.init();
     }
 
-    init() {
-        this.loadFromStorage();
-        this.startAutoLoad();
-    }
-
-    loadFromStorage() {
-        const saved = localStorage.getItem('savedConversations');
-        if (saved) {
-            try {
-                this.conversations = JSON.parse(saved);
-            } catch (error) {
-                console.error('Error loading conversations:', error);
+    initFirebase() {
+        // 初始化 Firebase
+        firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+        this.db = firebase.database();
+        this.conversationsRef = this.db.ref('conversations');
+        
+        // 监听数据变化
+        this.conversationsRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                this.conversations = Object.values(data);
+                localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
+                updateHistoryGrid(); // 更新显示
             }
-        }
+        });
     }
 
-    saveToStorage() {
-        localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
+    async saveToStorage() {
+        try {
+            // 保存到 Firebase
+            await this.conversationsRef.set(this.conversations);
+            // 同时保存到本地存储作为备份
+            localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
+        } catch (error) {
+            console.error('Error saving conversations:', error);
+            // 如果 Firebase 保存失败，至少保存到本地
+            localStorage.setItem('savedConversations', JSON.stringify(this.conversations));
+        }
     }
 
     exportToFile() {
@@ -75,8 +86,9 @@ class ConversationManager {
     }
 
     startAutoLoad() {
-        setInterval(() => {
-            this.checkForNewFiles();
+        setInterval(async () => {
+            await this.loadFromStorage();
+            updateHistoryGrid(); // 更新显示
         }, this.autoLoadInterval);
     }
 
