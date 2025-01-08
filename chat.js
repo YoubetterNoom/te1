@@ -1,3 +1,7 @@
+import CONFIG from './config';
+
+const CONFIG = window.CONFIG;
+
 window.sendMessage = sendMessage;
 window.refreshConversations = refreshConversations;
 window.saveConversation = saveConversation;
