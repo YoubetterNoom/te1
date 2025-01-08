@@ -1,6 +1,6 @@
 const CONFIG = {
     API_ENDPOINT: 'https://api.gptsapi.net/v1/chat/completions',
-    API_KEY: process.env.TEST_A,
+    API_KEY: 'sk-kj52388acf61fb938f0d03f2476973a2443b8cd0052RQXfz',
     MODEL: 'gpt-3.5-turbo',
     MAX_TOKENS: 300,
     TEMPERATURE: 0.8,
