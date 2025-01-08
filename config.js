@@ -1,6 +1,6 @@
 const CONFIG = {
-    API_ENDPOINT: 'https://api.gptsapi.net/v1/chat/completions',
-    API_KEY: 'sk-kj52388acf61fb938f0d03f2476973a2443b8cd0052RQXfz',
+    API_ENDPOINT: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    API_KEY: '',
     MODEL: 'gpt-3.5-turbo',
     MAX_TOKENS: 300,
     TEMPERATURE: 0.8,
@@ -29,9 +29,9 @@ Style guidelines:
 
 Focus on creating meaningful, engaging conversations while maintaining your unique identity as an advanced AI entity from the M78 Nebula.`,
     FIREBASE_CONFIG: {
-        apiKey: "AIzaSyDGWqGKVtXqGYV-506aa-Ry-nMhJWbVLQM",
-        authDomain: "martix-506aa.firebaseapp.com",
-        databaseURL: "https://martix-506aa-default-rtdb.firebaseio.com",
-        projectId: "martix-506aa"
+        apiKey: process.env.FIREBASE_API_KEY,
+        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+        databaseURL: process.env.FIREBASE_DATABASE_URL,
+        projectId: process.env.FIREBASE_PROJECT_ID
     }
 }; 
