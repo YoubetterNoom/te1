@@ -197,7 +197,7 @@ async function callAIAPI(message) {
         
         if (data.choices && data.choices.length > 0) {
             let reply = data.choices[0].message.content.trim();
-            reply = reply.replace(/^Assistant:|^AI:|^Aether AI:/, '').trim();
+            reply = reply.replace(/^Assistant:|^AI:|^MATRIX AI:/, '').trim();
             return reply;
         } else {
             throw new Error('No response from API');
@@ -241,7 +241,7 @@ async function callBackupAPI(message) {
 
         const data = await response.json();
         let reply = data.choices[0].message.content.trim();
-        reply = reply.replace(/^Assistant:|^AI:|^Aether AI:/, '').trim();
+        reply = reply.replace(/^Assistant:|^AI:|^MATRIX AI:/, '').trim();
         return reply;
     } catch (error) {
         console.error('Backup API Error:', error);
@@ -422,20 +422,20 @@ function startAutoRefresh() {
 }
 
 // 添加自定义确认对话框函数
-function showAether ialog(title, message) {
+function showMatrixDialog(title, message) {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
-        overlay.className = 'Aether dialog-overlay';
+        overlay.className = 'matrix-dialog-overlay';
         
         const dialog = document.createElement('div');
-        dialog.className = 'Aether dialog';
+        dialog.className = 'matrix-dialog';
         
         dialog.innerHTML = `
-            <h3 class="Aether dialog-title">${title}</h3>
-            <div class="Aether dialog-content">${message}</div>
-            <div class="Aether dialog-buttons">
-                <button class="Aether dialog-button confirm">Save</button>
-                <button class="Aether dialog-button cancel">Cancel</button>
+            <h3 class="matrix-dialog-title">${title}</h3>
+            <div class="matrix-dialog-content">${message}</div>
+            <div class="matrix-dialog-buttons">
+                <button class="matrix-dialog-button confirm">Save</button>
+                <button class="matrix-dialog-button cancel">Cancel</button>
             </div>
         `;
         
@@ -470,16 +470,16 @@ function showAether ialog(title, message) {
 function showLoadingDialog(steps) {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
-        overlay.className = 'Aether dialog-overlay';
+        overlay.className = 'matrix-dialog-overlay';
         
         const dialog = document.createElement('div');
-        dialog.className = 'Aether dialog loading-dialog';
+        dialog.className = 'matrix-dialog loading-dialog';
         
         dialog.innerHTML = `
-            <div class="Aether dialog-content">
+            <div class="matrix-dialog-content">
                 <div class="loading-steps"></div>
                 <div class="loading-animation">
-                    <div class="Aether code"></div>
+                    <div class="matrix-code"></div>
                 </div>
             </div>
         `;
@@ -533,7 +533,7 @@ async function saveConversation() {
             'Analyzing conversation structure',
             'Generating optimal title',
             'Preparing data for upload',
-            'Saving to Aether database'
+            'Saving to Matrix database'
         ]);
 
         if (currentConversation.length === 0) {
@@ -594,9 +594,9 @@ async function saveConversation() {
             console.log('Generated title:', generatedTitle);
 
             // 使用新的对话框确认
-            const confirmSave = await showAether ialog(
+            const confirmSave = await showMatrixDialog(
                 'Save Conversation',
-                `Generated title: "${generatedTitle}"<br><br>Do you want to save this conversation to the Aether `
+                `Generated title: "${generatedTitle}"<br><br>Do you want to save this conversation to the Matrix?`
             );
 
             if (!confirmSave) {
@@ -1035,10 +1035,10 @@ function loadConversation(conversation) {
                 if (aiMsg) {
                     const aiDiv = document.createElement('div');
                     aiDiv.className = 'ai-message';
-                    const aiText = typeof aiMsg === 'object' ? aiMsg.text : aiMsg.replace(/^AI: |^Aether AI: /, '');
+                    const aiText = typeof aiMsg === 'object' ? aiMsg.text : aiMsg.replace(/^AI: |^MATRIX AI: /, '');
                     aiDiv.innerHTML = `
                         <div class="message-content">
-                            <strong style="color: #0f0;">Aether AI:</strong> ${aiText}
+                            <strong style="color: #0f0;">MATRIX AI:</strong> ${aiText}
                         </div>
                         <div class="message-footer">
                             <div class="message-timestamp">${formatTimestamp(conversation.timestamp)}</div>
@@ -1260,7 +1260,7 @@ function updateSendButtonState(isResponding) {
             sendButton.classList.add('disabled');
             sendButton.innerHTML = `
                 <div class="button-content">
-                    <span>AI is thinking</span>
+                    <span>M78 thinking</span>
                     <div class="typing-dots">
                         <span></span>
                         <span></span>

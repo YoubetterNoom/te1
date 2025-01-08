@@ -11,10 +11,10 @@ class StartupAnimation {
 > LOADING KERNEL MODULES
 > ESTABLISHING SECURE CONNECTION
 > CONFIGURING NEURAL NETWORK
-> LOADING Aether PROTOCOL
+> LOADING M78 PROTOCOL
 > SYSTEM CHECK: OK
 
-> WELCOME TO THE Aether
+> WELCOME TO THE M78 SYSTEM
 > PLEASE CONNECT YOUR WALLET TO BEGIN...
 `;
         this.charIndex = 0;
@@ -43,8 +43,8 @@ class StartupAnimation {
         this.chatContainer.style.display = 'block';
         this.chatContainer.classList.add('fade-in');
         
-        const Aether = new AetherBackground();
-        Aether.animate();
+        const matrix = new MatrixBackground();
+        matrix.animate();
     }
 
     async typeText() {
@@ -76,8 +76,8 @@ class StartupAnimation {
         this.chatContainer.style.display = 'block';
         this.chatContainer.classList.add('fade-in');
         
-        const Aether = new AetherBackground();
-        Aether.animate();
+        const matrix = new MatrixBackground();
+        matrix.animate();
     }
 
     wait(ms) {

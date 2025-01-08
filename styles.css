@@ -8,7 +8,7 @@ body {
     min-height: 100vh;
 }
 
-.Aether-background {
+.matrix-background {
     position: fixed;
     top: 0;
     left: 0;
@@ -176,7 +176,7 @@ body.startup {
     display: none;
 }
 
-/* Aether style scrollbar for chat box */
+/* Matrix style scrollbar for chat box */
 .chat-box::-webkit-scrollbar {
     width: 12px;
     background: rgba(0, 20, 0, 0.3);
@@ -217,7 +217,7 @@ body.startup {
     animation: none;
 }
 
-/* Add Aether code rain effect on scrollbar track */
+/* Add Matrix code rain effect on scrollbar track */
 .chat-box::-webkit-scrollbar-track::before {
     animation: none;
     background: none;
@@ -395,8 +395,8 @@ input[disabled], button[disabled] {
     cursor: not-allowed;
 }
 
-/* Add Aether title styles */
-.Aether-title {
+/* Add Matrix title styles */
+.matrix-title {
     text-align: center;
     color: #0f0;
     font-size: 2.5em;
@@ -817,7 +817,7 @@ body {
     animation: tvOn 1.5s ease-in-out;
 }
 
-/* Aether style scrollbar - Global */
+/* Matrix style scrollbar - Global */
 ::-webkit-scrollbar {
     width: 12px;
     height: 12px;
@@ -1019,7 +1019,7 @@ button:hover,
     animation: none;
 }
 
-/* Remove Aether rain effect on scrollbar */
+/* Remove Matrix rain effect on scrollbar */
 .chat-box::-webkit-scrollbar-track::before {
     animation: none;
     background: none;
@@ -1910,7 +1910,7 @@ button:hover,
 }
 
 /* 确认对话框样式 */
-.Aether-dialog-overlay {
+.matrix-dialog-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -1924,7 +1924,7 @@ button:hover,
     animation: fadeIn 0.3s ease;
 }
 
-.Aether-dialog {
+.matrix-dialog {
     background: rgba(0, 20, 0, 0.95);
     border: 2px solid #0f0;
     border-radius: 8px;
@@ -1936,7 +1936,7 @@ button:hover,
     animation: slideIn 0.3s ease;
 }
 
-.Aether-dialog-title {
+.matrix-dialog-title {
     color: #0f0;
     font-size: 1.5em;
     margin: 0 0 20px 0;
@@ -1944,20 +1944,20 @@ button:hover,
     text-shadow: 0 0 10px #0f0;
 }
 
-.Aether-dialog-content {
+.matrix-dialog-content {
     color: #0f0;
     margin-bottom: 25px;
     text-align: center;
     line-height: 1.5;
 }
 
-.Aether-dialog-buttons {
+.matrix-dialog-buttons {
     display: flex;
     justify-content: center;
     gap: 15px;
 }
 
-.Aether-dialog-button {
+.matrix-dialog-button {
     background: transparent;
     border: 1px solid #0f0;
     color: #0f0;
@@ -1969,18 +1969,18 @@ button:hover,
     min-width: 100px;
 }
 
-.Aether-dialog-button:hover {
+.matrix-dialog-button:hover {
     background: rgba(0, 255, 0, 0.1);
     box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
     transform: translateY(-1px);
 }
 
-.Aether-dialog-button.confirm {
+.matrix-dialog-button.confirm {
     background: rgba(0, 255, 0, 0.1);
     border-width: 2px;
 }
 
-.Aether-dialog-button.cancel {
+.matrix-dialog-button.cancel {
     opacity: 0.8;
 }
 
@@ -2053,7 +2053,7 @@ button:hover,
     position: relative;
 }
 
-.Aether-code {
+.matrix-code {
     position: absolute;
     top: 0;
     left: 0;
@@ -2063,7 +2063,11 @@ button:hover,
         rgba(0, 255, 0, 0) 0%,
         rgba(0, 255, 0, 0.1) 50%,
         rgba(0, 255, 0, 0) 100%);
-    animation: AetherRain 2s linear infinite;
+    animation: matrixRain 2s linear infinite;
+}
+
+.button-content{
+    color: #0f0;
 }
 
 @keyframes fadeInStep {
@@ -2082,7 +2086,51 @@ button:hover,
     50% { transform: scale(0.5); opacity: 0.3; }
 }
 
-@keyframes AetherRain {
+@keyframes matrixRain {
     0% { transform: translateY(-100%); }
     100% { transform: translateY(100%); }
+}
+
+/* 社交媒体链接样式 */
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: -10px 0 20px 0;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0, 20, 0, 0.8);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    border-radius: 20px;
+    color: #0f0;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: rgba(0, 40, 0, 0.8);
+    border-color: #0f0;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.social-icon {
+    font-size: 1.2em;
+    opacity: 0.9;
+}
+
+.social-text {
+    font-family: var(--matrix-font);
+    letter-spacing: 1px;
+}
+
+/* 调整标题和链接的间距 */
+.matrix-title {
+    margin-bottom: 15px;
 } 

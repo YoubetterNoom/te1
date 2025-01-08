@@ -6,7 +6,7 @@ function displayConversation(conversation) {
     
     // Add conversation title and metadata
     const headerDiv = document.createElement('div');
-    headerDiv.className = 'conversation-header Aether-panel';
+    headerDiv.className = 'conversation-header matrix-panel';
     headerDiv.innerHTML = `
         <h2 class="conversation-title">${conversation.title || 'Untitled Conversation'}</h2>
         <div class="conversation-metadata">
@@ -32,7 +32,7 @@ function displayConversation(conversation) {
 
     // Add messages container
     const messagesContainer = document.createElement('div');
-    messagesContainer.className = 'messages-container Aether-panel';
+    messagesContainer.className = 'messages-container matrix-panel';
     
     if (conversation.messages && conversation.messages.length > 0) {
         conversation.messages.forEach(message => {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3>Unable to load conversation</h3>
                 <p>${error.message}</p>
                 <button onclick="window.location.href='index.html'" class="return-button">
-                    Return to Aether
+                    Return to Matrix
                 </button>
             </div>
         `;

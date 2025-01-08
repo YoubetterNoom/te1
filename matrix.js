@@ -1,6 +1,6 @@
-class AetherBackground {
+class MatrixBackground {
     constructor() {
-        this.canvas = document.getElementById('Aether');
+        this.canvas = document.getElementById('matrix');
         this.ctx = this.canvas.getContext('2d');
         this.chars = "日ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ012345789:・.";
         this.fontSize = 16;
