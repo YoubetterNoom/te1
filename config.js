@@ -1,21 +1,22 @@
 const CONFIG = {
-    API_ENDPOINT: process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://api.gptsapi.net/v1/chat/completions',
-    MODEL: process.env.NEXT_PUBLIC_MODEL || 'gpt-3.5-turbo',
-    MAX_TOKENS: parseInt(process.env.NEXT_PUBLIC_MAX_TOKENS || '300'),
-    TEMPERATURE: parseFloat(process.env.NEXT_PUBLIC_TEMPERATURE || '0.8'),
+    API_ENDPOINT: 'https://api.gptsapi.net/v1/chat/completions',
+    MODEL: 'gpt-3.5-turbo',
+    MAX_TOKENS: 300,
+    TEMPERATURE: 0.8,
     STOP_SEQUENCES: ['\n\n'],
-    SYSTEM_PROMPT: process.env.NEXT_PUBLIC_SYSTEM_PROMPT || `You are M78 AI...`,
+    SYSTEM_PROMPT: `You are M78 AI...`,
     FIREBASE_CONFIG: {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+        apiKey: 'AIzaSyDGWqGKVtXqGYV-506aa-Ry-nMhJWbVLQM',
+        authDomain: 'martix-506aa.firebaseapp.com',
+        databaseURL: 'https://martix-506aa-default-rtdb.firebaseio.com',
+        projectId: 'martix-506aa'
     }
 };
 
-// 确保在浏览器端也能访问
+// 为了安全起见，移除敏感信息
 if (typeof window !== 'undefined') {
-    window.CONFIG = CONFIG;
-}
-
-export default CONFIG; 
+    window.CONFIG = {
+        ...CONFIG,
+        API_KEY: undefined // 确保 API key 不会暴露在客户端
+    };
+} 
