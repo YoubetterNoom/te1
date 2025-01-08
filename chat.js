@@ -163,9 +163,12 @@ async function sendMessage() {
 
 async function callAIAPI(message) {
     try {
-        const response = await fetch('/api/chat', {
+        console.log('Sending message to API:', message);
+        
+        const response = await fetch(CONFIG.API_ENDPOINT, {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${CONFIG.API_KEY}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -181,7 +184,7 @@ async function callAIAPI(message) {
                     }
                 ],
                 max_tokens: CONFIG.MAX_TOKENS,
-                temperature: CONFIG.TEMPERATURE
+                temperature: CONFIG.TEMPERATURE,
             })
         });
 
@@ -190,9 +193,18 @@ async function callAIAPI(message) {
         }
 
         const data = await response.json();
-        return data.choices[0].message.content.trim();
+        console.log('API response:', data);
+        
+        if (data.choices && data.choices.length > 0) {
+            let reply = data.choices[0].message.content.trim();
+            reply = reply.replace(/^Assistant:|^AI:|^MATRIX AI:/, '').trim();
+            return reply;
+        } else {
+            throw new Error('No response from API');
+        }
+
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('API Call Error:', error);
         throw error;
     }
 }
