@@ -1,7 +1,7 @@
 const CONFIG = {
-    API_ENDPOINT: 'https://api.cohere.ai/v1/generate',
-    API_KEY: 'WGcfPnBCfNeZrhZGhyK5SBN8MPLXW3exHufJWFyn',
-    MODEL: 'command',
+    API_ENDPOINT: 'https://api.gptsapi.net/v1/chat/completions',
+    API_KEY: 'sk-kj52388acf61fb938f0d03f2476973a2443b8cd0052RQXfz',
+    MODEL: 'gpt-3.5-turbo',
     MAX_TOKENS: 300,
     TEMPERATURE: 0.8,
     STOP_SEQUENCES: ['\n\n'],

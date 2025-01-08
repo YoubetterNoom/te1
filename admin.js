@@ -4,12 +4,14 @@ let autoRefreshInterval;
 
 function verifyPassword() {
     const password = document.getElementById('adminPassword').value;
-    if (password === ADMIN_PASSWORD) {
+    if (password === ADMIN_PASSWORD) { // 使用常量定义的密码
         document.getElementById('admin-login').style.display = 'none';
         document.getElementById('admin-dashboard').style.display = 'block';
-        loadConversations();
-        setupRefreshButton();
-        startAutoRefresh();
+        
+        // 登录成功后重新加载数据
+        if (window.adminPanel) {
+            window.adminPanel.loadInitialData();
+        }
     } else {
         alert('Invalid password. Access denied.');
     }
@@ -291,17 +293,27 @@ style.textContent = `
     }
 
     .refresh-btn:hover {
-        background: #0f0;
-        color: #000;
+        background: rgba(0, 255, 0, 0.2);
     }
 
-    .refresh-icon {
+    .refresh-btn .refresh-icon {
         font-size: 20px;
         transition: transform 0.5s ease;
     }
 
-    .refreshing .refresh-icon {
+    .refresh-btn.refreshing .refresh-icon {
         animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .last-update {
+        color: #0f0;
+        font-size: 0.8em;
+        margin-left: 10px;
     }
 
     .admin-header {
@@ -322,11 +334,6 @@ style.textContent = `
         font-family: 'Courier New', monospace;
         text-transform: uppercase;
         animation: textGlow 1.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
     }
 
     @keyframes textGlow {
@@ -415,6 +422,115 @@ style.textContent = `
         border: 1px solid #0f0;
         color: #0f0;
     }
+
+    .admin-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .admin-modal-content {
+        background: #000;
+        border: 2px solid #0f0;
+        padding: 20px;
+        width: 500px;
+        max-width: 90%;
+        color: #0f0;
+    }
+
+    .admin-modal h2 {
+        margin-top: 0;
+        color: #0f0;
+        border-bottom: 1px solid #0f0;
+        padding-bottom: 10px;
+    }
+
+    .admin-modal input,
+    .admin-modal textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        background: #000;
+        border: 1px solid #0f0;
+        color: #0f0;
+    }
+
+    .admin-modal textarea {
+        height: 100px;
+        resize: vertical;
+    }
+
+    .modal-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .modal-buttons button {
+        padding: 8px 16px;
+        cursor: pointer;
+    }
+
+    .messages-container {
+        margin-top: 20px;
+    }
+
+    .messages-container h3 {
+        margin-bottom: 10px;
+        color: #0f0;
+    }
+
+    .message-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .message-input select {
+        width: 80px;
+        background: #000;
+        border: 1px solid #0f0;
+        color: #0f0;
+    }
+
+    .message-input textarea {
+        flex-grow: 1;
+        height: 60px;
+    }
+
+    .remove-message {
+        width: 30px;
+        height: 30px;
+        background: transparent;
+        border: 1px solid #f00;
+        color: #f00;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .add-message-btn {
+        width: 100%;
+        margin-top: 10px;
+        background: rgba(0, 255, 0, 0.2);
+        border: 1px solid #0f0;
+        color: #0f0;
+        padding: 8px;
+        cursor: pointer;
+    }
+
+    .add-message-btn:hover {
+        background: rgba(0, 255, 0, 0.3);
+    }
 `;
 document.head.appendChild(style);
 
@@ -455,87 +571,415 @@ window.submitNewChat = submitNewChat;
 
 class AdminPanel {
     constructor() {
+        console.log('AdminPanel constructor called');
         this.initFirebase();
         this.setupEventListeners();
+        // 立即加载初始数据
+        this.loadInitialData();
+    }
+
+    async loadInitialData() {
+        try {
+            console.log('Loading initial data...');
+            const snapshot = await this.conversationsRef.once('value');
+            this.updateConversationList(snapshot);
+        } catch (error) {
+            console.error('Error loading initial data:', error);
+        }
     }
 
     initFirebase() {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+        try {
+            console.log('Initializing Firebase in AdminPanel...');
+            if (!firebase.apps.length) {
+                firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+            }
+            this.db = firebase.database();
+            this.conversationsRef = this.db.ref('/conversations');
+            
+            // 测试数据库连接
+            this.testDatabaseConnection();
+            
+            // 监听后续数据变化
+            this.conversationsRef.on('value', (snapshot) => {
+                console.log('Received data update in AdminPanel:', snapshot.val());
+                this.updateConversationList(snapshot);
+            }, (error) => {
+                console.error('Error listening to Firebase:', error);
+            });
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
         }
-        this.db = firebase.database();
-        this.conversationsRef = this.db.ref('/conversations');
-        
-        // 监听数据变化
-        this.conversationsRef.on('value', this.updateConversationList.bind(this));
+    }
+
+    async testDatabaseConnection() {
+        try {
+            const connectedRef = this.db.ref(".info/connected");
+            connectedRef.on("value", (snap) => {
+                if (snap.val() === true) {
+                    console.log("✅ Connected to Firebase!");
+                } else {
+                    console.log("❌ Not connected to Firebase");
+                }
+            });
+        } catch (error) {
+            console.error('Database connection test failed:', error);
+        }
     }
 
     updateConversationList(snapshot) {
-        const conversationList = document.querySelector('.conversation-list');
-        conversationList.innerHTML = '';
+        const container = document.querySelector('.conversation-list');
+        container.innerHTML = '';
         
-        const data = snapshot.val();
-        if (data) {
-            Object.entries(data).reverse().forEach(([key, item]) => {
-                const conv = item.conversation;
-                const element = this.createConversationElement(key, conv);
-                conversationList.appendChild(element);
+        const conversations = [];
+        snapshot.forEach(child => {
+            conversations.push({
+                key: child.key,
+                data: child.val().conversation
             });
-        }
+        });
+
+        // 对对话进行排序：置顶的在前，按时间倒序排列
+        conversations.sort((a, b) => {
+            if (a.data.isPinned && !b.data.isPinned) return -1;
+            if (!a.data.isPinned && b.data.isPinned) return 1;
+            return new Date(b.data.timestamp) - new Date(a.data.timestamp);
+        });
+
+        conversations.forEach(({ key, data }) => {
+            const element = this.createConversationElement(key, data);
+            container.appendChild(element);
+        });
     }
 
     createConversationElement(key, conv) {
         const element = document.createElement('div');
         element.className = 'admin-conversation-item';
+        if (conv.isPinned) {
+            element.classList.add('pinned');
+        }
+        
+        const title = conv.title || 'Untitled';
+        const timestamp = new Date(conv.timestamp).toLocaleString();
+        const walletAddress = conv.walletAddress || 'Unknown';
+        
         element.innerHTML = `
             <div class="conversation-info">
-                <div class="title">${conv.title || 'Untitled'}</div>
-                <div class="timestamp">${conv.timestamp}</div>
-                <div class="wallet-address">${conv.walletAddress}</div>
+                <div class="title">
+                    ${conv.isPinned ? '<span class="pin-indicator">📌</span>' : ''}
+                    ${title}
+                </div>
+                <div class="timestamp">${timestamp}</div>
+                <div class="wallet-address">${walletAddress}</div>
+                <div class="stats-row">
+                    <div class="views-counter">
+                        <span class="eye-icon">👁</span>
+                        <input type="number" class="views-input" value="${conv.views || 0}" min="0">
+                        <button class="save-views-btn">Save</button>
+                    </div>
+                    <div class="rating-counter">
+                        <span class="star-icon">⭐</span>
+                        <input type="number" class="rating-input" value="${conv.rating || 0}" min="0" max="10" step="0.1">
+                        <button class="save-rating-btn">Save</button>
+                    </div>
+                </div>
             </div>
             <div class="admin-actions">
-                <button onclick="adminPanel.viewConversation('${key}')">View</button>
-                <button onclick="adminPanel.deleteConversation('${key}')" class="delete-btn">Delete</button>
+                <button class="pin-btn">${conv.isPinned ? 'Unpin' : 'Pin'}</button>
+                <button class="view-btn">View</button>
+                <button class="delete-btn">Delete</button>
             </div>
         `;
+
+        // 添加事件监听器
+        element.querySelector('.pin-btn').addEventListener('click', () => this.togglePin(key, conv));
+        element.querySelector('.view-btn').addEventListener('click', () => this.viewConversation(key, conv));
+        element.querySelector('.delete-btn').addEventListener('click', () => this.deleteConversation(key));
+        
+        // 添加保存统计信息的事件监听器
+        element.querySelector('.save-views-btn').addEventListener('click', () => {
+            const newViews = parseInt(element.querySelector('.views-input').value) || 0;
+            this.updateViews(key, newViews);
+        });
+
+        element.querySelector('.save-rating-btn').addEventListener('click', () => {
+            const newRating = parseFloat(element.querySelector('.rating-input').value) || 0;
+            this.updateRating(key, newRating);
+        });
+
         return element;
     }
 
-    async createNewChat(chatData) {
+    async updateViews(key, newViews) {
         try {
-            await this.conversationsRef.push({
-                conversation: chatData,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            console.log('New chat created successfully');
+            const updates = {};
+            updates[`/conversations/${key}/conversation/views`] = newViews;
+            await this.db.ref().update(updates);
+            console.log('Views updated successfully');
         } catch (error) {
-            console.error('Error creating new chat:', error);
+            console.error('Error updating views:', error);
+            alert('Failed to update views: ' + error.message);
         }
+    }
+
+    async updateRating(key, newRating) {
+        try {
+            if (newRating < 0 || newRating > 10) {
+                alert('Rating must be between 0 and 10');
+                return;
+            }
+            const updates = {};
+            updates[`/conversations/${key}/conversation/rating`] = newRating;
+            await this.db.ref().update(updates);
+            console.log('Rating updated successfully');
+        } catch (error) {
+            console.error('Error updating rating:', error);
+            alert('Failed to update rating: ' + error.message);
+        }
+    }
+
+    viewConversation(key, conv) {
+        const modal = document.createElement('div');
+        modal.className = 'admin-modal';
+        
+        const messages = conv.messages.map(msg => `
+            <div class="message ${msg.type}-message">
+                <strong>${msg.type === 'user' ? 'User' : 'AI'}:</strong>
+                <div class="message-content">${msg.text}</div>
+            </div>
+        `).join('');
+
+        modal.innerHTML = `
+            <div class="admin-modal-content">
+                <div class="modal-header">
+                    <h2>${conv.title || 'Untitled'}</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="conversation-meta">
+                    <div>Created: ${new Date(conv.timestamp).toLocaleString()}</div>
+                    <div>Wallet: ${conv.walletAddress || 'Unknown'}</div>
+                    <div>Views: ${conv.views || 0}</div>
+                    <div>Rating: ${conv.rating || '0'}/10</div>
+                </div>
+                <div class="conversation-messages">
+                    ${messages}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 添加关闭按钮事件
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // 点击模态框外部关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
     }
 
     async deleteConversation(key) {
-        if (confirm('Are you sure you want to delete this conversation?')) {
-            try {
+        try {
+            console.log('Attempting to delete conversation with key:', key);
+            if (confirm('Are you sure you want to delete this conversation?')) {
                 await this.conversationsRef.child(key).remove();
-                console.log('Conversation deleted successfully');
-            } catch (error) {
-                console.error('Error deleting conversation:', error);
+                console.log('Successfully deleted conversation with key:', key);
             }
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            alert('Failed to delete conversation: ' + error.message);
         }
     }
 
-    async viewConversation(key) {
-        const snapshot = await this.conversationsRef.child(key).once('value');
-        const data = snapshot.val();
-        if (data && data.conversation) {
-            this.showConversationModal(data.conversation);
+    setupEventListeners() {
+        // 创建聊天按钮
+        const createChatBtn = document.getElementById('createChatBtn');
+        if (createChatBtn) {
+            console.log('Found create chat button');
+            createChatBtn.addEventListener('click', () => {
+                console.log('Create chat button clicked');
+                this.showCreateChatModal();
+            });
+        } else {
+            console.error('Create chat button not found');
+        }
+
+        // 刷新按钮
+        const refreshButton = document.getElementById('refreshButton');
+        if (refreshButton) {
+            console.log('Found refresh button');
+            refreshButton.addEventListener('click', () => {
+                console.log('Refresh button clicked');
+                this.refreshData();
+            });
+        } else {
+            console.error('Refresh button not found');
         }
     }
 
-    showConversationModal(conversation) {
-        // ... 显示对话详情的模态框代码 ...
+    async refreshData() {
+        try {
+            // 添加刷新动画
+            const refreshButton = document.getElementById('refreshButton');
+            refreshButton.classList.add('refreshing');
+            
+            console.log('Refreshing data...');
+            // 重新获取数据
+            const snapshot = await this.conversationsRef.once('value');
+            this.updateConversationList(snapshot);
+            
+            // 更新最后刷新时间
+            const lastUpdateTime = document.getElementById('lastUpdateTime');
+            if (lastUpdateTime) {
+                lastUpdateTime.textContent = new Date().toLocaleTimeString();
+            }
+
+            // 移除刷新动画
+            setTimeout(() => {
+                refreshButton.classList.remove('refreshing');
+            }, 1000);
+
+            console.log('Data refresh complete');
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+            alert('Failed to refresh data: ' + error.message);
+        }
+    }
+
+    showCreateChatModal() {
+        console.log('Showing create chat modal');
+        const modal = document.createElement('div');
+        modal.className = 'admin-modal create-chat-modal';
+        modal.innerHTML = `
+            <div class="admin-modal-content">
+                <h2>Create New Chat</h2>
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input type="text" id="chatTitle" placeholder="Enter chat title">
+                </div>
+                <div class="form-group">
+                    <label>Wallet Address:</label>
+                    <input type="text" id="chatWallet" placeholder="Enter wallet address">
+                </div>
+                <div class="messages-container">
+                    <h3>Messages</h3>
+                    <div id="messagesList">
+                        <div class="message-input">
+                            <select class="message-type">
+                                <option value="user">User</option>
+                                <option value="ai">AI</option>
+                            </select>
+                            <textarea class="message-text" placeholder="Enter message"></textarea>
+                            <button class="remove-message">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-message-btn" onclick="window.adminPanel.addMessageInput()">+ Add Message</button>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="this.closest('.admin-modal').remove()">Cancel</button>
+                    <button type="button" class="submit-btn" onclick="window.adminPanel.submitNewChat()">Create</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 添加删除消息的事件监听
+        modal.querySelectorAll('.remove-message').forEach(btn => {
+            btn.onclick = function() {
+                if (document.querySelectorAll('.message-input').length > 1) {
+                    this.closest('.message-input').remove();
+                }
+            };
+        });
+    }
+
+    addMessageInput() {
+        const messagesList = document.getElementById('messagesList');
+        const newMessage = document.createElement('div');
+        newMessage.className = 'message-input';
+        newMessage.innerHTML = `
+            <select class="message-type">
+                <option value="user">User</option>
+                <option value="ai">AI</option>
+            </select>
+            <textarea class="message-text" placeholder="Enter message"></textarea>
+            <button type="button" class="remove-message">×</button>
+        `;
+
+        messagesList.appendChild(newMessage);
+
+        // 添加删除按钮事件
+        newMessage.querySelector('.remove-message').onclick = function() {
+            if (document.querySelectorAll('.message-input').length > 1) {
+                this.closest('.message-input').remove();
+            }
+        };
+    }
+
+    async submitNewChat() {
+        const title = document.getElementById('chatTitle').value || 'New Chat';
+        const walletAddress = document.getElementById('chatWallet').value || 'ADMIN';
+        
+        try {
+            // 收集所有消息
+            const messages = Array.from(document.querySelectorAll('.message-input')).map(input => ({
+                type: input.querySelector('.message-type').value,
+                text: input.querySelector('.message-text').value
+            })).filter(msg => msg.text.trim());
+
+            if (messages.length === 0) {
+                alert('Please add at least one message');
+                return;
+            }
+
+            const newChat = {
+                title: title,
+                timestamp: new Date().toISOString(),
+                messages: messages,
+                walletAddress: walletAddress,
+                views: 0
+            };
+
+            console.log('Saving new chat:', newChat);
+
+            // 保存到 Firebase
+            const newRef = await this.conversationsRef.push({
+                conversation: newChat,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            console.log('Successfully saved chat with key:', newRef.key);
+            // 关闭模态框
+            document.querySelector('.admin-modal')?.remove();
+        } catch (error) {
+            console.error('Error creating new chat:', error);
+            alert('Failed to create new chat: ' + error.message);
+        }
+    }
+
+    async togglePin(key, conv) {
+        try {
+            const updates = {};
+            updates[`/conversations/${key}/conversation/isPinned`] = !conv.isPinned;
+            
+            await this.db.ref().update(updates);
+            console.log(`Conversation ${conv.isPinned ? 'unpinned' : 'pinned'} successfully`);
+            
+            // 刷新数据
+            this.refreshData();
+        } catch (error) {
+            console.error('Error toggling pin:', error);
+            alert('Failed to update pin status: ' + error.message);
+        }
     }
 }
 
-// 初始化管理员面板
-window.adminPanel = new AdminPanel(); 
+// 确保在页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded, initializing AdminPanel...');
+    window.adminPanel = new AdminPanel();
+}); 

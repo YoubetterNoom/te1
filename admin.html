@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matrix Admin Panel</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="config.js"></script>
 </head>
 <body>
     <div class="crt-frame">
@@ -24,12 +27,15 @@
                 <div id="admin-dashboard" class="admin-panel" style="display: none;">
                     <div class="admin-header">
                         <h1 class="matrix-title">SYSTEM CONTROL</h1>
-                        <button id="refreshButton" class="refresh-btn">
-                            <span class="refresh-icon">↻</span>
-                        </button>
+                        <div class="refresh-section">
+                            <button id="refreshButton" class="refresh-btn">
+                                <span class="refresh-icon">↻</span>
+                            </button>
+                            <span class="last-update">Last update: <span id="lastUpdateTime"></span></span>
+                        </div>
                     </div>
                     <div class="admin-controls">
-                        <button onclick="adminPanel.showCreateChatModal()">Create New Chat</button>
+                        <button id="createChatBtn">Create New Chat</button>
                         <button onclick="window.location.href='index.html'">Return to Matrix</button>
                         <div class="conversation-controls">
                             <button onclick="exportConversations()">Export All</button>

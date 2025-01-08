@@ -36,30 +36,30 @@
                     <div class="input-area">
                         <input type="text" id="userInput" placeholder="Enter message...">
                         <button id="sendButton">Send</button>
-                        <button id="saveButton">Save</button>
+                        <button id="saveButton">Submit</button>
                         <button id="clearButton">Clear</button>
                     </div>
                 </div>
 
                 <div class="history-grid">
-                    <div class="pinned-section" style="display: none;">
-                        <h2 class="section-title">📌 Pinned Conversations</h2>
+                    <div class="section-header">
+                        <h2 class="section-title">Conversations library</h2>
+                        <div class="header-controls">
+                            <div class="last-update">
+                                Last update: <span id="lastUpdateTime">Just now</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pinned-section">
+                        <h3 class="section-title">High Score Conversations</h3>
                         <div class="grid-container pinned-container">
                             <!-- Pinned conversations will be added here -->
                         </div>
                     </div>
                     
-                    <div class="section-header">
-                        <div class="refresh-section">
-                            <button id="refreshButton" class="refresh-btn">
-                                <span class="refresh-icon">↻</span> Refresh
-                            </button>
-                            <span class="last-update">Last updated: <span id="lastUpdateTime">Just now</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="recent-section" style="display: block;">
-                        <h2 class="section-title">Recent Conversations</h2>
+                    <div class="recent-section">
+                        <h3 class="section-title">Recent Conversations</h3>
                         <div class="grid-container recent-container">
                             <!-- Recent conversations will be added here -->
                         </div>
