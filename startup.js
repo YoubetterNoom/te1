@@ -11,10 +11,10 @@ class StartupAnimation {
 > LOADING KERNEL MODULES
 > ESTABLISHING SECURE CONNECTION
 > CONFIGURING NEURAL NETWORK
-> LOADING MATRIX PROTOCOL
+> LOADING Aether PROTOCOL
 > SYSTEM CHECK: OK
 
-> WELCOME TO THE MATRIX
+> WELCOME TO THE Aether
 > PLEASE CONNECT YOUR WALLET TO BEGIN...
 `;
         this.charIndex = 0;
@@ -43,8 +43,8 @@ class StartupAnimation {
         this.chatContainer.style.display = 'block';
         this.chatContainer.classList.add('fade-in');
         
-        const matrix = new MatrixBackground();
-        matrix.animate();
+        const Aether = new AetherBackground();
+        Aether.animate();
     }
 
     async typeText() {
@@ -76,8 +76,8 @@ class StartupAnimation {
         this.chatContainer.style.display = 'block';
         this.chatContainer.classList.add('fade-in');
         
-        const matrix = new MatrixBackground();
-        matrix.animate();
+        const Aether = new AetherBackground();
+        Aether.animate();
     }
 
     wait(ms) {
