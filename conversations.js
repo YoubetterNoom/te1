@@ -117,37 +117,32 @@ class ConversationManager {
         }
     }
 
-    async saveToStorage() {
+    async saveToStorage(conversation) {
         try {
-            const chatBox = document.getElementById('chatBox');
-            if (!chatBox || chatBox.children.length === 0) {
-                throw new Error('No conversation to save');
+            if (!this.initialized) {
+                throw new Error('ConversationManager not initialized');
             }
 
-            // 获取当前对话
-            const currentConversation = {
-                title: chatBox.lastElementChild?.textContent.substring(0, 30) + '...' || 'New Chat',
-                timestamp: new Date().toISOString(),
-                messages: Array.from(chatBox.children).map(msg => ({
-                    type: msg.classList.contains('user-message') ? 'user' : 'ai',
-                    text: msg.textContent.replace(/^(You: |AI: )/, '')
-                })),
-                walletAddress: window.walletManager?.wallet?.toString() || 'Unknown',
-                views: 0
+            // 使用传入的 conversation 对象，保持其原有标题
+            const conversationData = {
+                conversation: {
+                    title: conversation.title,  // 保持 AI 生成的标题
+                    messages: conversation.messages,
+                    timestamp: conversation.timestamp,
+                    walletAddress: conversation.walletAddress,
+                    views: 0,
+                    rating: 0
+                },
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
-            console.log('Preparing to save conversation:', currentConversation);
-
             // 保存到 Firebase
-            const newRef = await this.conversationsRef.push({
-                conversation: currentConversation,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
+            const newRef = await this.conversationsRef.push(conversationData);
+            console.log('Conversation saved with ID:', newRef.key);
 
-            console.log('Successfully saved to Firebase with key:', newRef.key);
             return newRef.key;
         } catch (error) {
-            console.error('Error saving to Firebase:', error);
+            console.error('Error saving to storage:', error);
             throw error;
         }
     }

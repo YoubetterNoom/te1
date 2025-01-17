@@ -72,92 +72,106 @@ function showTitleDialog() {
 }
 
 async function sendMessage() {
-    // 检查是否正在等待 AI 响应
-    if (isAIResponding) {
-        appendMessage('system', 'Please wait for AI to complete the response...');
-        return;
-    }
-
-    // 检查消息发送频率
-    const now = Date.now();
-    if (now - lastMessageTime < MESSAGE_COOLDOWN) {
-        appendMessage('system', 'Please slow down! Wait a moment before sending another message.');
-        return;
-    }
-
-    // 首先检查钱包连接
-    if (!window.walletManager || !window.walletManager.isConnected()) {
-        alert('Please connect your wallet first!');
-        return;
-    }
-
-    const input = document.getElementById('userInput');
-    const message = input.value.trim();
-    const sendButton = document.getElementById('sendButton');
+    const userInput = document.getElementById('userInput');
+    const message = userInput.value.trim();
     
-    if (message) {
-        try {
-            // 禁用输入和发送按钮
-            input.disabled = true;
-            sendButton.disabled = true;
-            isAIResponding = true;
+    if (!message) return;
 
-            // 更新发送按钮状态
-            updateSendButtonState(true);
+    try {
+        // 添加用户消息
+        appendMessage('user', message);
+        userInput.value = '';
+
+        // 检查钱包连接状态
+        if (!window.walletManager?.isConnected()) {
+            // 允许发送第一条消息，但随后提示连接钱包
+            appendMessage('system', 'Please connect your wallet in the top right corner to continue the conversation. 👆');
             
-            // 显示用户消息
-            appendMessage('user', message);
-            input.value = '';
+            // 禁用输入框和发送按钮
+            userInput.disabled = true;
+            document.getElementById('sendButton').disabled = true;
             
-            // 显示加载状态
-            const typingIndicator = document.createElement('div');
-            typingIndicator.className = 'message ai-message typing';
-            typingIndicator.innerHTML = `
-                <div class="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            `;
-            document.getElementById('chatBox').appendChild(typingIndicator);
-
-            try {
-                // 调用API
-                const response = await callAIAPI(message);
-                typingIndicator.remove();
-                
-                // 保存到对话历史
-                currentConversation.push({ type: 'user', text: message });
-                currentConversation.push({ type: 'ai', text: response });
-                
-                appendMessage('ai', response);
-            } catch (error) {
-                console.error('API Error:', error);
-                typingIndicator.remove();
-                appendMessage('system', 'Error: Could not get AI response. Retrying...');
-                
-                // 重试使用备用API
-                try {
-                    const backupResponse = await callBackupAPI(message);
-                    currentConversation.push({ type: 'user', text: message });
-                    currentConversation.push({ type: 'ai', text: backupResponse });
-                    appendMessage('ai', backupResponse);
-                } catch (backupError) {
-                    appendMessage('system', 'All APIs failed. Please try again later.');
-                }
-            }
-
-            // 更新最后发送消息的时间
-            lastMessageTime = Date.now();
-
-        } finally {
-            // 重新启用输入和发送按钮
-            input.disabled = false;
-            sendButton.disabled = false;
-            isAIResponding = false;
-            updateSendButtonState(false);
-            input.focus();
+            // 高亮钱包按钮
+            const walletButton = document.getElementById('wallet-button');
+            walletButton.classList.add('highlight-wallet');
+            
+            return;
         }
+
+        // 检查是否正在响应
+        if (isAIResponding) {
+            console.log('AI is still responding...');
+            return;
+        }
+
+        // 检查消息发送频率
+        const now = Date.now();
+        if (now - lastMessageTime < MESSAGE_COOLDOWN) {
+            appendMessage('system', 'Please slow down! Wait a moment before sending another message.');
+            return;
+        }
+
+        const sendButton = document.getElementById('sendButton');
+        
+        // 禁用输入和发送按钮
+        userInput.disabled = true;
+        sendButton.disabled = true;
+        isAIResponding = true;
+
+        // 更新发送按钮状态
+        updateSendButtonState(true);
+        
+        // 显示加载状态
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'message ai-message typing';
+        typingIndicator.innerHTML = `
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+        document.getElementById('chatBox').appendChild(typingIndicator);
+
+        try {
+            // 调用API
+            const response = await callAIAPI(message);
+            typingIndicator.remove();
+            
+            // 保存到对话历史
+            currentConversation.push({ type: 'user', text: message });
+            currentConversation.push({ type: 'ai', text: response });
+            
+            appendMessage('ai', response);
+        } catch (error) {
+            console.error('API Error:', error);
+            typingIndicator.remove();
+            appendMessage('system', 'Error: Could not get AI response. Retrying...');
+            
+            // 重试使用备用API
+            try {
+                const backupResponse = await callBackupAPI(message);
+                currentConversation.push({ type: 'user', text: message });
+                currentConversation.push({ type: 'ai', text: backupResponse });
+                appendMessage('ai', backupResponse);
+            } catch (backupError) {
+                appendMessage('system', 'All APIs failed. Please try again later.');
+            }
+        }
+
+        // 更新最后发送消息的时间
+        lastMessageTime = Date.now();
+
+    } catch (error) {
+        console.error('Error sending message:', error);
+        appendMessage('system', 'Error processing message. Please try again.');
+    } finally {
+        // 重新启用输入和发送按钮
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        isAIResponding = false;
+        updateSendButtonState(false);
+        userInput.focus();
     }
 }
 
@@ -197,7 +211,7 @@ async function callAIAPI(message) {
         
         if (data.choices && data.choices.length > 0) {
             let reply = data.choices[0].message.content.trim();
-            reply = reply.replace(/^Assistant:|^AI:|^MATRIX AI:/, '').trim();
+            reply = reply.replace(/^Assistant:|^AI:|^MATRIX AI:|^M78:|^M78 AI:/, '').trim();
             return reply;
         } else {
             throw new Error('No response from API');
@@ -254,28 +268,30 @@ function appendMessage(type, text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}-message`;
     
-    if (type === 'user') {
-        // 用户消息直接显示
-        messageDiv.textContent = `You: ${text}`;
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    } else {
-        // AI 消息使用打字机效果
-        messageDiv.textContent = 'AI: ';
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        let index = 0;
-        const typeWriter = () => {
-            if (index < text.length) {
-                messageDiv.textContent = 'AI: ' + text.substring(0, index + 1);
-                index++;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                setTimeout(typeWriter, 20); // 调整数字可以改变打字速度
-            }
-        };
-        typeWriter();
+    // 根据消息类型添加不同的标签
+    let sender = '';
+    switch(type) {
+        case 'user':
+            sender = '👤 User';
+            break;
+        case 'ai':
+            sender = '🤖 Infyra';
+            break;
+        case 'system':
+            sender = '⚡ System';
+            break;
     }
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <span class="sender">${sender}</span>
+            <span class="time">${new Date().toLocaleTimeString()}</span>
+        </div>
+        <div class="message-content">${text}</div>
+    `;
+    
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 // 添加打字机效果的样式
@@ -315,20 +331,68 @@ function setupEventListeners() {
     const clearButton = document.getElementById('clearButton');
     const userInput = document.getElementById('userInput');
 
-    // 检查钱包连接状态并设置初始状态
-    if (!window.walletManager || !window.walletManager.isConnected()) {
-        if (userInput) userInput.disabled = true;
-        if (sendButton) sendButton.disabled = true;
-        if (saveButton) saveButton.disabled = true;
+    // 初始状态下允许输入和发送
+    if (userInput) userInput.disabled = false;
+    if (sendButton) sendButton.disabled = false;
+    
+    // 保存按钮事件监听器
+    if (saveButton) {
+        saveButton.addEventListener('click', async () => {
+            console.log('Save button clicked');
+            
+            // 检查是否正在处理
+            if (isProcessingSave) {
+                console.log('Save in progress');
+                return;
+            }
+
+            try {
+                // 检查是否有对话内容
+                if (currentConversation.length === 0) {
+                    appendMessage('system', 'No conversation to save.');
+                    return;
+                }
+
+                // 检查钱包连接
+                if (!window.walletManager?.isConnected()) {
+                    appendMessage('system', 'Please connect your wallet first.');
+                    return;
+                }
+
+                isProcessingSave = true;
+                saveButton.disabled = true; // 禁用按钮防止重复点击
+
+                // 显示加载过程
+                await showLoadingDialog([
+                    'Analyzing conversation structure',
+                    'Generating optimal title',
+                    'Preparing data for upload',
+                    'Saving to Matrix database'
+                ]);
+
+                // 调用保存函数
+                await saveConversation();
+                
+                appendMessage('system', 'Conversation saved successfully!');
+                console.log('Save operation completed');
+            } catch (error) {
+                console.error('Error in save operation:', error);
+                appendMessage('system', 'Failed to save conversation. Please try again.');
+            } finally {
+                isProcessingSave = false;
+                saveButton.disabled = false; // 重新启用按钮
+            }
+        });
+
+        // 初始启用保存按钮
+        saveButton.disabled = false;
     }
 
     // 设置按钮事件监听器
     if (sendButton) {
         sendButton.addEventListener('click', sendMessage);
     }
-    if (saveButton) {
-        saveButton.addEventListener('click', saveConversation);
-    }
+    
     if (clearButton) {
         clearButton.addEventListener('click', clearChat);
     }
@@ -490,6 +554,13 @@ function showLoadingDialog(steps) {
         const stepsContainer = dialog.querySelector('.loading-steps');
         let currentStep = 0;
         
+        const defaultSteps = [
+            'Connecting to Infyra network...',  // 修改这里
+            'Initializing neural pathways...',
+            'Processing request...',
+            'Generating response...'
+        ];
+        
         const showStep = async () => {
             if (currentStep < steps.length) {
                 const step = steps[currentStep];
@@ -519,39 +590,14 @@ function showLoadingDialog(steps) {
 
 // 修改 saveConversation 函数中的相关部分
 async function saveConversation() {
-    // 检查是否正在处理或已经保存
-    if (isProcessingSave || conversationSaved) {
-        console.log('Save in progress or already saved');
-        return;
-    }
-
     try {
-        isProcessingSave = true;
-
-        // 显示加载过程
-        await showLoadingDialog([
-            'Analyzing conversation structure',
-            'Generating optimal title',
-            'Preparing data for upload',
-            'Saving to Matrix database'
-        ]);
-
-        if (currentConversation.length === 0) {
-            alert('No conversation to save');
-            return;
-        }
-
-        if (!window.walletManager?.isConnected()) {
-            alert('Please connect your wallet first');
-            return;
-        }
-
         // 显示正在生成标题的提示
         appendMessage('system', 'Analyzing conversation and generating title...');
 
         // 构建对话内容用于生成标题
         const conversationText = currentConversation
             .map(msg => `${msg.type === 'user' ? 'Human' : 'Assistant'}: ${msg.text}`)
+            .slice(-6)  // 只取最后几条消息用于生成标题
             .join('\n');
 
         // 生成标题
@@ -568,7 +614,7 @@ async function saveConversation() {
                     messages: [
                         {
                             role: "system",
-                            content: "You are a title generator. Based on the conversation, generate a concise title (2-6 words) that captures the main topic. Reply with ONLY the title, no quotes or extra text."
+                            content: "You are a title generator. Generate a short, concise title (2-6 words) that captures the main topic or theme of the conversation. Respond with ONLY the title, no quotes or extra text."
                         },
                         {
                             role: "user",
@@ -585,91 +631,44 @@ async function saveConversation() {
             }
 
             const titleData = await titleResponse.json();
-            if (!titleData.choices?.[0]?.message?.content) {
-                throw new Error('Invalid title response');
-            }
-
             generatedTitle = titleData.choices[0].message.content.trim();
-            generatedTitle = generatedTitle.replace(/^["']|["']$/g, '');
-            console.log('Generated title:', generatedTitle);
+            // 清理标题中的引号和多余空格
+            generatedTitle = generatedTitle.replace(/^["']|["']$/g, '').trim();
+            
+            console.log('Generated title:', generatedTitle); // 添加日志
 
-            // 使用新的对话框确认
-            const confirmSave = await showMatrixDialog(
-                'Save Conversation',
-                `Generated title: "${generatedTitle}"<br><br>Do you want to save this conversation to the Matrix?`
-            );
-
-            if (!confirmSave) {
-                appendMessage('system', 'Save operation cancelled by user.');
-                return;
+            if (!generatedTitle) {
+                throw new Error('Empty title generated');
             }
-
-        } catch (titleError) {
-            console.error('Error generating title:', titleError);
-            appendMessage('system', 'Failed to generate title. Please try again.');
-            return;
+        } catch (error) {
+            console.error('Error generating title:', error);
+            generatedTitle = 'Untitled Conversation';
         }
 
-        // 检查是否已经存在相同的对话
-        const walletAddress = window.walletManager.getFormattedAddress();
-        const conversationsRef = firebase.database().ref('conversations');
-        const snapshot = await conversationsRef.orderByChild('timestamp')
-            .limitToLast(1)
-            .once('value');
-        
-        const existingConversations = [];
-        snapshot.forEach(child => {
-            existingConversations.push({
-                key: child.key,
-                data: child.val()
-            });
-        });
-
-        const isDuplicate = existingConversations.some(conv => {
-            const existing = conv.data.conversation;
-            return existing.walletAddress === walletAddress &&
-                   JSON.stringify(existing.messages) === JSON.stringify(currentConversation);
-        });
-
-        if (isDuplicate) {
-            appendMessage('system', 'This conversation has already been saved.');
-            return;
-        }
-
-        // 保存对话到 Firebase
-        const conversationData = {
-            title: generatedTitle,
+        // 创建对话对象
+        const conversation = {
+            title: generatedTitle,  // 确保使用生成的标题
+            messages: currentConversation.map(msg => ({
+                type: msg.type,
+                text: msg.text,
+                timestamp: new Date().toISOString()
+            })),
             timestamp: new Date().toISOString(),
-            messages: currentConversation,
-            walletAddress: walletAddress,
-            views: 0,
-            rating: 0
+            walletAddress: window.walletManager.wallet.toString()
         };
 
-        // 保存到 Firebase
-        const newConversationRef = await conversationsRef.push({
-            conversation: conversationData,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        });
+        console.log('Saving conversation with title:', conversation.title); // 添加日志
 
-        console.log('Conversation saved successfully with ID:', newConversationRef.key);
-        
-        // 禁用输入和保存按钮
-        document.getElementById('userInput').disabled = true;
-        document.getElementById('sendButton').disabled = true;
-        document.getElementById('saveButton').disabled = true;
-        
-        // 添加保存成功提示
-        appendMessage('system', `Conversation saved successfully with title: "${generatedTitle}"`);
-        
-        // 标记对话已保存
-        conversationSaved = true;
-        
+        // 更新 Firebase
+        if (window.conversationManager) {
+            await window.conversationManager.saveToStorage(conversation);
+            console.log('Conversation saved successfully with title:', generatedTitle); // 添加日志
+        }
+
+        return conversation;
     } catch (error) {
-        console.error('Error saving conversation:', error);
-        appendMessage('system', 'Error saving conversation. Please try again.');
-    } finally {
-        isProcessingSave = false;
+        console.error('Save operation failed:', error);
+        throw error;
     }
 }
 
@@ -1100,27 +1099,10 @@ function showConversation(conv) {
 
 function clearChat() {
     const chatBox = document.getElementById('chatBox');
-    chatBox.innerHTML = '';
-    currentConversation = [];
-    conversationSaved = false;
-    isConversationSubmitted = false;
-    
-    // Re-enable input and buttons using ID selectors
-    const userInput = document.getElementById('userInput');
-    const sendButton = document.getElementById('sendButton');
-    const saveButton = document.getElementById('saveButton');
-    
-    if (userInput) userInput.disabled = false;
-    if (sendButton) sendButton.disabled = false;
-    if (saveButton) saveButton.disabled = false;
-    
-    document.querySelector('.chat-container').classList.remove('conversation-submitted');
-
-    // Remove the pointer-events: none style
-    const inputArea = document.querySelector('.input-area');
-    if (inputArea) {
-        inputArea.style.pointerEvents = 'auto';
-        inputArea.style.opacity = '1';
+    if (chatBox) {
+        chatBox.innerHTML = '';
+        currentConversation = [];
+        appendMessage('system', 'Chat history cleared.');
     }
 }
 
@@ -1220,38 +1202,6 @@ function updateCountdown(walletAddress, timerElement) {
     countdownTimer = setInterval(updateTimer, 1000);
 }
 
-// 在文档加载完成后添加事件监听
-document.addEventListener('DOMContentLoaded', () => {
-    const saveButton = document.getElementById('saveButton');
-    if (saveButton) {
-        saveButton.addEventListener('click', async () => {
-            console.log('Save button clicked');
-            console.log('ConversationManager:', window.conversationManager);
-            
-            if (!window.conversationManager) {
-                console.error('ConversationManager not initialized');
-                return;
-            }
-
-            // 检查是否有对话内容
-            const chatBox = document.getElementById('chatBox');
-            if (!chatBox || chatBox.children.length === 0) {
-                console.log('No conversation to save');
-                return;
-            }
-
-            try {
-                await window.conversationManager.saveToStorage();
-                console.log('Save operation completed');
-            } catch (error) {
-                console.error('Error in save operation:', error);
-            }
-        });
-    } else {
-        console.error('Save button not found');
-    }
-});
-
 // 更新发送按钮状态的函数
 function updateSendButtonState(isResponding) {
     const sendButton = document.getElementById('sendButton');
@@ -1260,7 +1210,7 @@ function updateSendButtonState(isResponding) {
             sendButton.classList.add('disabled');
             sendButton.innerHTML = `
                 <div class="button-content">
-                    <span>M78 thinking</span>
+                    <span>Infyra thinking</span>  <!-- 修改这里 -->
                     <div class="typing-dots">
                         <span></span>
                         <span></span>
