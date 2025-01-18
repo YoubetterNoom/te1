@@ -1,8 +1,8 @@
 class OnlineCounter {
     constructor() {
-        this.baseCount = 100;  // 基础人数100
-        this.minCount = 80;    // 最小人数80
-        this.maxCount = 150;   // 最大人数150
+        this.baseCount = 200;  // 基础人数100
+        this.minCount = 180;    // 最小人数80
+        this.maxCount = 270;   // 最大人数150
         this.updateInterval = 10000; // 10秒更新一次
         this.currentCount = this.generateCount(); // 保存当前人数
         this.intervalId = null;
